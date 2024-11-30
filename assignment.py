@@ -1,5 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
 
 # Initialize the graph
 my_graph = nx.DiGraph()
@@ -9,13 +11,54 @@ def add_user(user_name, attributes = None):
 
     if attributes is None:
         attributes = {}
-    my_graph.add_node(user_name)
+
+    private_key, public_key = generate_keys()
+    
+    # Store public/private keys
+    attributes['private_key'] = private_key
+    attributes['public_key'] = public_key
+
+    my_graph.add_node(user_name, **attributes)
 
 def add_connection(from_user, to_user):
     # Add a directional connection between two users
     
     if not my_graph.has_edge(from_user, to_user):
         my_graph.add_edge(from_user, to_user)
+
+def generate_keys():
+  private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+  public_key = private_key.public_key()
+  return private_key, public_key
+
+def send_message(sender, receiver, message_body):
+  sender_node = my_graph.nodes[sender]
+  receiver_node = my_graph.nodes[receiver]
+
+  public_key = receiver_node['public_key']
+  encrypted_message = public_key.encrypt(
+      message_body.encode(),
+      padding.OAEP(
+          mgf=padding.MGF1(algorithm=hashes.SHA256()),
+          algorithm=hashes.SHA256(),
+          label=None
+      )
+  )
+  
+  print(f"Message from {sender} to {receiver} encrypted: {encrypted_message}")
+  return encrypted_message
+
+def decrypt_message(receiver, encrypted_message):
+  private_key = my_graph.nodes[receiver]['private_key']
+  decrypted_message = private_key.decrypt(
+      encrypted_message,
+      padding.OAEP(
+          mgf=padding.MGF1(algorithm=hashes.SHA256()),
+          algorithm=hashes.SHA256(),
+          label=None
+      )
+  ).decode()
+  print(f"Message decrypted by {receiver}: {decrypted_message}")
 
 def draw_graph():
     # Draw the graph using matplotlib
@@ -52,5 +95,12 @@ if __name__ == "__main__":
 
     add_connection("carol", "bob")
 
+    encrypted_msg = send_message("alice", "bob", "Hello Bob!")
+    decrypt_message("bob", encrypted_msg)
+
     # Draw graph
     draw_graph()
+
+
+
+
