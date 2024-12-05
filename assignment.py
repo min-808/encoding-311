@@ -17,7 +17,7 @@ def generate_keys():
     public_key = private_key.public_key()
     return private_key, public_key
 
-# Updated add_user function
+# add_user function
 def add_user(user_name, attributes=None):
     if attributes is None:
         attributes = {}
@@ -103,6 +103,7 @@ def respond_to_signed_message(sender, receiver, signed_message):
     print(json.dumps(response, indent=4))  # Pretty-print the response
     return response
 
+# Testing
 if __name__ == "__main__":
     # Example graph setup
     add_user("alice", {"real_name": "Alice Smith", "age": 30, "location": "Oahu"})
