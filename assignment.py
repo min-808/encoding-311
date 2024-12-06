@@ -1,3 +1,5 @@
+import datetime
+import json
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -9,7 +11,7 @@ def add_user(user_name, attributes = None):
 
     if attributes is None:
         attributes = {}
-    my_graph.add_node(user_name)
+    my_graph.add_node(user_name, messages=[])
 
 def add_connection(from_user, to_user):
     # Add a directional connection between two users
@@ -36,7 +38,10 @@ def draw_graph():
     plt.title("Example Graph")
     plt.axis("off")
     plt.show()
- 
+    
+    # Draw graph
+    draw_graph()
+
 # Example usage
 if __name__ == "__main__":
     # Add users
@@ -51,6 +56,93 @@ if __name__ == "__main__":
     add_connection("bob", "alice")
 
     add_connection("carol", "bob")
+    
 
-    # Draw graph
-    draw_graph()
+def sendCompressedMessage(sender, receiver, message):
+    """
+    Compresses a message using Run Length Encoding and sends it
+    with the appropriate data.
+    """
+    if sender not in my_graph.nodes or receiver not in my_graph.nodes:
+        raise ValueError("Sender or receiver does not exist in the graph.")
+    
+    # Run Length Encode Function
+    def runLengthEncode(message):
+        if not message:
+            return ""
+        
+        encodedMessage = []
+        count = 1
+
+        for i in range(1, len(message)):
+            if message[i] == message[i - 1]:
+                count += 1
+            else:
+                encodedMessage.append(f"{count}{message[i - 1]}")
+                count = 1
+        
+        # Add the last group
+        encodedMessage.append(f"{count}{message[-1]}")
+        
+        return ''.join(encodedMessage)
+
+    
+    # Compress the message
+    compressedMessage = runLengthEncode(message)
+    
+    now = str(datetime.datetime.now())
+    # Create data to be stored in the message
+    data = {"compression":"run-length","sender":sender,"receiver":receiver,"timestamp":now}
+    
+    # Create the message content to be stored in the sender's messages
+    messageContent = {"data":data,"messageBody":compressedMessage}
+    
+    # Add the message to the sender's messages
+    my_graph.nodes[sender]["messages"].append(messageContent)
+    # Add the message to the receiver's messages
+    my_graph.nodes[receiver]["messages"].append(messageContent)
+    
+    return messageContent
+  
+def decompressMessage(message):
+    """
+    Decompresses a message that was compressed using Run Length Encoding.
+    """
+    if not message:
+        return ""
+    
+    decodedMessage = []
+    count = ""
+    
+    for char in message:
+        if char.isdigit():
+            count += char  # Accumulate digits for count
+        else:
+            decodedMessage.append(char * int(count))  # Repeat character
+            count = ""  # Reset count
+    
+    return ''.join(decodedMessage)
+  
+def getMessages(user):
+    """
+    Returns all messages for a user.
+    """
+    if user not in my_graph.nodes:
+        raise ValueError("User does not exist in the graph.")
+    
+    return my_graph.nodes[user]["messages"]
+  
+# Example usage
+
+# Send a compressed message from alice to bob
+messageContent = sendCompressedMessage("alice", "bob", "Super Secret Message abbcccddddeeeeeffffff")
+print(messageContent)
+
+# Decompress the message
+decompressedMessage = decompressMessage(messageContent["messageBody"])
+print(decompressedMessage)
+
+# Get all messages for bob
+messages = getMessages("bob")
+print(messages)
+    
