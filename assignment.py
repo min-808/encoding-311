@@ -61,7 +61,7 @@ if __name__ == "__main__":
 def sendCompressedMessage(sender, receiver, message):
     """
     Compresses a message using Run Length Encoding and sends it
-    with the appropriate data.
+    with the appropriate metadata.
     """
     if sender not in my_graph.nodes or receiver not in my_graph.nodes:
         raise ValueError("Sender or receiver does not exist in the graph.")
@@ -91,11 +91,11 @@ def sendCompressedMessage(sender, receiver, message):
     compressedMessage = runLengthEncode(message)
     
     now = str(datetime.datetime.now())
-    # Create data to be stored in the message
-    data = {"compression":"run-length","sender":sender,"receiver":receiver,"timestamp":now}
+    # Create metadata to be stored in the message
+    metadata = {"compression":"run-length","sender":sender,"receiver":receiver,"timestamp":now}
     
     # Create the message content to be stored in the sender's messages
-    messageContent = {"data":data,"messageBody":compressedMessage}
+    messageContent = {"metadata":metadata,"message body":compressedMessage}
     
     # Add the message to the sender's messages
     my_graph.nodes[sender]["messages"].append(messageContent)
