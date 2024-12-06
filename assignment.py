@@ -139,7 +139,7 @@ messageContent = sendCompressedMessage("alice", "bob", "Super Secret Message abb
 print(messageContent)
 
 # Decompress the message
-decompressedMessage = decompressMessage(messageContent["messageBody"])
+decompressedMessage = decompressMessage(messageContent["message body"])
 print(decompressedMessage)
 
 # Get all messages for bob
